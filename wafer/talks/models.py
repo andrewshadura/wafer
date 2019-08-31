@@ -63,6 +63,8 @@ class TalkType(models.Model):
 
     class Meta:
         ordering = ['order', 'id']
+        verbose_name = _('talk type')
+        verbose_name_plural = _('talk types')
 
     def css_class(self):
         """Return a string for use as a css class name"""
@@ -77,15 +79,17 @@ class TalkType(models.Model):
 @python_2_unicode_compatible
 class Track(models.Model):
     """A conference track."""
-    name = models.CharField(max_length=255)
-    description = models.TextField(max_length=1024)
-    order = models.IntegerField(default=1)
+    name = models.CharField(_('name'), max_length=255)
+    description = models.TextField(_('description'), max_length=1024)
+    order = models.IntegerField(_('order'), default=1)
 
     def __str__(self):
         return u'%s' % (self.name,)
 
     class Meta:
         ordering = ['order', 'id']
+        verbose_name = _('track')
+        verbose_name_plural = _('tracks')
 
     def css_class(self):
         """Return a string for use as a css class name"""
@@ -94,7 +98,7 @@ class Track(models.Model):
         return u'track-%s' % slugify(self.name)
 
     css_class.admin_order_field = 'name'
-    css_class.short_description = 'CSS class name'
+    css_class.short_description = _('CSS class name')
 
 
 @reversion.register(follow=('urls',))
@@ -106,6 +110,8 @@ class Talk(models.Model):
             ("view_all_talks", "Can see all talks"),
             ("edit_private_notes", "Can edit the private notes fields"),
         )
+        verbose_name = _('talk')
+        verbose_name_plural = _('talks')
 
     TALK_STATUS = (
         (ACCEPTED, 'Accepted'),
@@ -119,24 +125,27 @@ class Talk(models.Model):
 
     talk_id = models.AutoField(primary_key=True)
     talk_type = models.ForeignKey(
-        TalkType, null=True, blank=True, on_delete=models.SET_NULL)
+        TalkType, verbose_name=_("talk type"), null=True, blank=True, on_delete=models.SET_NULL)
     track = models.ForeignKey(
-        Track, null=True, blank=True, on_delete=models.SET_NULL)
+        Track, verbose_name=_("track"), null=True, blank=True, on_delete=models.SET_NULL)
 
-    title = models.CharField(max_length=1024)
+    title = models.CharField(_("title"), max_length=1024)
 
     abstract = MarkupField(
+        _("abstract"),
         help_text=_("Write two or three paragraphs describing your talk. "
                     "Who is your audience? What will they get out of it? "
                     "What will you cover?<br />"
                     "You can use Markdown syntax."))
 
     notes = models.TextField(
+        _("notes"),
         null=True, blank=True,
         help_text=_("Any notes for the conference organisers?  "
                     "These are not visible to the public."))
 
     private_notes = models.TextField(
+        _("private notes"),
         null=True, blank=True,
         help_text=_("Note space for the conference organisers (not visible "
                     "to submitter)"))
@@ -147,16 +156,19 @@ class Talk(models.Model):
     corresponding_author = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name='contact_talks',
         on_delete=models.CASCADE,
+        verbose_name=_("corresponding author"),
         help_text=_(
             "The person submitting the talk (and who questions regarding the "
             "talk should be addressed to)."))
 
     authors = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name='talks',
+        verbose_name=_("authors"),
         help_text=lazy(authors_help, str))
 
     video = models.BooleanField(
         default=True,
+        verbose_name=_("video"),
         help_text=_(
             "By checking this, you are giving permission for the talk to be "
             "videoed, and distributed by the conference, under the "
@@ -164,6 +176,7 @@ class Talk(models.Model):
         ) % (settings.WAFER_VIDEO_LICENSE_URL, settings.WAFER_VIDEO_LICENSE))
     video_reviewer = models.EmailField(
         null=True, blank=True,
+        verbose_name=_("video reviewer"),
         help_text=_(
             "Email address of a person who will be allowed to review "
             "and approve your video details. "
@@ -195,15 +208,15 @@ class Talk(models.Model):
             contact = profile.contact_number
         else:
             # Should we wrap this in a span for styling?
-            contact = 'NO CONTACT INFO'
+            contact = _('NO CONTACT INFO')
         return '%s - %s' % (email, contact)
-    get_corresponding_author_contact.short_description = 'Contact Details'
+    get_corresponding_author_contact.short_description = _('Contact Details')
 
     def get_corresponding_author_name(self):
         return render_author(self.corresponding_author)
 
     get_corresponding_author_name.admin_order_field = 'corresponding_author'
-    get_corresponding_author_name.short_description = 'Corresponding Author'
+    get_corresponding_author_name.short_description = _('Corresponding Author')
 
     def get_authors_display_name(self):
         authors = list(self.authors.all())
@@ -306,14 +319,16 @@ class Review(models.Model):
     talk = models.ForeignKey(Talk, on_delete=models.CASCADE,
                              related_name='reviews')
     reviewer = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                 verbose_name=_('reviewer'),
                                  on_delete=models.CASCADE)
 
     notes = MarkupField(
+        _('notes'),
         null=True, blank=True,
         help_text=_("Comments on the proposal (markdown)"))
 
     def __str__(self):
-        return u'Review of %s by %s (%s)' % (
+        return _(u'Review of %s by %s (%s)') % (
             self.talk.title, self.reviewer, self.avg_score)
 
     @property
@@ -330,6 +345,8 @@ class Review(models.Model):
 
     class Meta:
         unique_together = (('talk', 'reviewer'),)
+        verbose_name = _('review')
+        verbose_name_plural = _('reviews')
 
 
 @python_2_unicode_compatible
